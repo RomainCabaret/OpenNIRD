@@ -12,7 +12,7 @@ interface LevelPreviewProps {
 }
 
 export function LevelPreview({ level }: LevelPreviewProps) {
-  const { isLevelUnlocked, unlockLevel } = useUser();
+  const { isLevelUnlocked, isLevelCompleted } = useUser();
 
   const router = useRouter();
 
@@ -68,7 +68,7 @@ export function LevelPreview({ level }: LevelPreviewProps) {
         </p>
 
         <div className="mb-6">
-          <div className="mb-2 flex items-end justify-between">
+          {/* <div className="mb-2 flex items-end justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Collectibles
             </span>
@@ -80,12 +80,12 @@ export function LevelPreview({ level }: LevelPreviewProps) {
                 / {level.collectibles}
               </span>
             </div>
-          </div>
+          </div> */}
 
           <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
             <div
               className="h-full rounded-full bg-gradient-to-r from-[#FF9F1C] to-[#FF4B1F] shadow-[0_0_10px_rgba(255,75,31,0.5)] transition-all duration-1000 ease-out"
-              style={{ width: `${percentage}%` }}
+              style={{ width: `${isLevelCompleted(level.id) ? 0 : 100}%` }}
             />
           </div>
         </div>

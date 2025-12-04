@@ -69,7 +69,12 @@ export function PaginationWrapper({
       )}
     >
       {/* --- HEADER : PROGRESS BAR & TITLE --- */}
-      <div className="w-full pt-8 pb-6 px-6 md:px-12 flex flex-col gap-6 z-10 bg-gradient-to-b from-[#0B1221] via-[#0B1221] to-transparent">
+      <div
+        className={cn(
+          "w-full pt-8 pb-6 px-6 md:px-12 flex flex-col gap-6 z-10 bg-gradient-to-b from-[#0B1221] via-[#0B1221] to-transparent",
+          currentPage === totalPages && miniGame && "!max-sm:hidden"
+        )}
+      >
         {/* Titre et Compteur */}
         <div className="flex justify-between items-end">
           <h1 className="text-xl md:text-2xl font-black uppercase tracking-widest text-white drop-shadow-md">
@@ -177,7 +182,12 @@ export function PaginationWrapper({
       </div>
 
       {/* --- FOOTER : CONTRÔLES --- */}
-      <div className="p-6 md:px-12 flex justify-between items-center border-t border-white/5 bg-[#0B1221]/90 backdrop-blur-md z-20">
+      <div
+        className={cn(
+          "p-6 md:px-12 flex justify-between items-center border-t border-white/5 bg-[#0B1221]/90 backdrop-blur-md z-20",
+          currentPage === totalPages && miniGame && "hidden"
+        )}
+      >
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}

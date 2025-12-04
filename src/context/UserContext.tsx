@@ -31,6 +31,7 @@ interface UserContextType {
   addCollectibles: (levelId: number, amount: number) => void;
 
   // Getters
+  isLevelCompleted: (levelId: number) => boolean;
   isLevelUnlocked: (levelId: number) => boolean;
   getLevelData: (levelId: number) => LevelProgress;
   getLastUnlockedLevelId: () => number;
@@ -176,6 +177,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     return user.levels[levelId]?.unlocked || false;
   };
 
+  const isLevelCompleted = (levelId: number): boolean => {
+    return user.levels[levelId]?.unlocked || false;
+  };
+
   const getLevelData = (levelId: number): LevelProgress => {
     return user.levels[levelId] || DEFAULT_LEVEL_STATE;
   };
@@ -247,6 +252,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
         updateCollectibles,
         addCollectibles,
         isLevelUnlocked,
+        isLevelCompleted,
         getLevelData,
         getLastUnlockedLevelId,
         changeUsername,
