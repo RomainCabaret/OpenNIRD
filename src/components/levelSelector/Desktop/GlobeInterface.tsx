@@ -1,3 +1,4 @@
+"use client";
 import { FixedCamera } from "@/components/3d/assets/Camera/PerspectiveCamera";
 import { CollectiblesCounter } from "@/components/3d/Collectibles-counter";
 import { ControlButtons } from "@/components/3d/Control-buttons";
@@ -8,6 +9,7 @@ import { useLevelNavigation } from "@/hooks/use-level-navigation";
 import { Level } from "@/types/types";
 import { OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
+import { useRouter } from "next/navigation";
 import { useRef } from "react";
 import type { OrbitControls as OrbitControlsType } from "three-stdlib";
 
@@ -19,6 +21,8 @@ export function GlobeInterface({
   IS_DEBUG?: boolean;
 }) {
   const controlsRef = useRef<OrbitControlsType>(null);
+
+  const router = useRouter();
 
   const { isLevelUnlocked, getLastUnlockedLevelId } = useUser();
 
@@ -84,7 +88,7 @@ export function GlobeInterface({
         onSelect={() => {
           if (!isCurrentLevelLocked) {
             console.log("Navigation vers:", currentLevel.name);
-            // router.push(`/play/${currentLevel.id}`)
+            router.push(`/niveau/${currentLevel.id}`);
           }
         }}
         isNavigating={isNavigating}

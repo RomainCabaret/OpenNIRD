@@ -37,8 +37,8 @@ const dinroundpro = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "nuit info 2025",
-  description: "H2Ocean Application",
+  title: "OpenNIRD",
+  description: "OpenNIRD Application",
   icons: {
     icon: "/icon.svg",
   },
