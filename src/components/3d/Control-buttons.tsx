@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Lock, Rocket } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ControlButtonsProps {
   onRotateLeft: () => void;
@@ -19,6 +20,9 @@ export function ControlButtons({
   isNavigating,
   isLocked = false,
 }: ControlButtonsProps) {
+  
+  const router = useRouter();
+
   return (
     <div className="absolute bottom-10 left-1/2 z-30 flex -translate-x-1/2 items-center">
       <div className="flex items-center gap-1 rounded-full border border-white/10 bg-[#0B1221]/90 p-2 shadow-2xl backdrop-blur-md">

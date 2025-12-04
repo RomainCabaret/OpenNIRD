@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { Level } from "@/types/types";
 import { ArrowRight, Lock } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface LevelPreviewProps {
   level: Level;
@@ -12,6 +13,8 @@ interface LevelPreviewProps {
 
 export function LevelPreview({ level }: LevelPreviewProps) {
   const { isLevelUnlocked, unlockLevel } = useUser();
+
+  const router = useRouter();
 
   const percentage =
     level.collectibles > 0
@@ -93,6 +96,9 @@ export function LevelPreview({ level }: LevelPreviewProps) {
             isLocked &&
               "cursor-not-allowed bg-slate-800 text-slate-500 hover:shadow-none hover:bg-slate-800"
           )}
+          onClick={() => {
+            router.push(`/niveau/${level.id}`);
+          }}
         >
           <span
             className={cn(

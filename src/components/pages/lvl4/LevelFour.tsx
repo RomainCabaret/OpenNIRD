@@ -1,13 +1,13 @@
-import { BossEncounter } from "@/components/boss/BossEncounter";
 import { LessonSlide } from "@/components/levelSelector/LessonSlide";
 import { PaginationWrapper } from "@/components/pagination/PaginationWrapper";
 import React from "react";
+import BossLevelFour from "./BossLevelFour";
 
 function LevelFour() {
   return (
     <PaginationWrapper
       title="Module 4 : Les Abysses"
-      miniGame={<BossEncounter />} // Le Boss est passé ici
+      miniGame={<BossLevelFour />} // Le Boss est passé ici
     >
       {/* --- PAGE 1 --- */}
       <LessonSlide
