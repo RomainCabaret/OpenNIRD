@@ -1,7 +1,6 @@
 import { LessonSlide } from "@/components/levelSelector/LessonSlide";
 import { PaginationWrapper } from "@/components/pagination/PaginationWrapper";
 import React from "react";
-import BossLevelFive from "../lvl5/BossLevelFive";
 import BossLevelOne from "./BossLevelOne";
 
 function LevelOne() {
