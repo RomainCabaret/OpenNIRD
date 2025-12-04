@@ -38,13 +38,13 @@ export const Navbar = ({ className = "" }: Props) => {
     {
       href: "/",
       text: "Parcours",
-      mobileIcon: <Pi className="w-7 h-7" />,
+      mobileIcon: <Map className="w-6 h-6" />,
       icon: <Map className="w-6 h-6" />,
     },
     {
       href: "/quest",
       text: "Quêtes",
-      mobileIcon: <IdCard className="w-7 h-7" />,
+      mobileIcon: <Trophy className="w-6 h-6" />,
       icon: <Trophy className="w-6 h-6" />,
     },
     {
