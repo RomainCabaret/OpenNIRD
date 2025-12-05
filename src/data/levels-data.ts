@@ -35,8 +35,8 @@ export const levels: Level[] = [
     collected: 72,
     difficulty: 3,
     character: "🏜️",
-    lat: 8.4,
-    lon: 31,
+    lat: 22.6,
+    lon: -280,
   },
   {
     id: 4,
