@@ -1,7 +1,8 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 const COLORS = {
@@ -23,24 +24,30 @@ export function GlobeEnvironment() {
 function FlyingSaucer() {
   const ufoRef = useRef<THREE.Group>(null);
   const cockpitRef = useRef<THREE.Mesh>(null);
+  const router = useRouter(); // 2. Initialisation du router
+  const [hovered, setHovered] = useState(false); // 3. État pour le survol
+
+  // Gestion du curseur : change en "pointer" quand on survole la soucoupe
+  useEffect(() => {
+    document.body.style.cursor = hovered ? "pointer" : "auto";
+  }, [hovered]);
 
   useFrame((state) => {
     if (!ufoRef.current) return;
     const time = state.clock.elapsedTime;
 
-    // GLOBE ORBITE 2.5
-    const orbitRadius = 4.3; // 2.5 + 1.8
+    const orbitRadius = 4.3;
     ufoRef.current.position.set(
-      Math.sin(time * 0.3) * orbitRadius, // X
-      1.8 + Math.sin(time * 1.5) * 0.15, // Y
-      Math.cos(time * 0.3) * orbitRadius // Z
+      Math.sin(time * 0.3) * orbitRadius,
+      1.8 + Math.sin(time * 1.5) * 0.15,
+      Math.cos(time * 0.3) * orbitRadius
     );
 
-    ufoRef.current.rotation.y = time * 0.2; // ROTATION
+    ufoRef.current.rotation.y = time * 0.2;
     ufoRef.current.rotation.z = Math.sin(time) * 0.1;
 
     if (cockpitRef.current) {
-      const isBlinking = Math.sin(time * 10) > 0; // clignotement
+      const isBlinking = Math.sin(time * 10) > 0;
       (
         cockpitRef.current.material as THREE.MeshStandardMaterial
       ).emissiveIntensity = isBlinking ? 1 : 0.1;
@@ -48,11 +55,17 @@ function FlyingSaucer() {
   });
 
   return (
-    <group ref={ufoRef} scale={0.9}>
+    <group
+      ref={ufoRef}
+      scale={0.9}
+      onClick={() => router.push("/snake")}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+    >
       <mesh position-y={0}>
         <cylinderGeometry args={[0.5, 0.5, 0.1, 32]} />
         <meshStandardMaterial
-          color={COLORS.saucerBody}
+          color={hovered ? "#e0e0e0" : COLORS.saucerBody} // Petit effet visuel au survol (optionnel)
           metalness={0.9}
           roughness={0.1}
         />
@@ -70,7 +83,6 @@ function FlyingSaucer() {
     </group>
   );
 }
-
 function AsteroidField() {
   const groupRef = useRef<THREE.Group>(null);
 

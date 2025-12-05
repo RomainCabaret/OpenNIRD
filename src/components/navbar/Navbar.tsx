@@ -41,18 +41,18 @@ export const Navbar = ({ className = "" }: Props) => {
       mobileIcon: <Map className="w-6 h-6" />,
       icon: <Map className="w-6 h-6" />,
     },
-    {
-      href: "/quest",
-      text: "Quêtes",
-      mobileIcon: <Trophy className="w-6 h-6" />,
-      icon: <Trophy className="w-6 h-6" />,
-    },
-    {
-      href: "/team",
-      text: "Équipe",
-      mobileIcon: <Users className="w-7 h-7" />,
-      icon: <Users className="w-6 h-6" />,
-    },
+    // {
+    //   href: "/quest",
+    //   text: "Quêtes",
+    //   mobileIcon: <Trophy className="w-6 h-6" />,
+    //   icon: <Trophy className="w-6 h-6" />,
+    // },
+    // {
+    //   href: "/team",
+    //   text: "Équipe",
+    //   mobileIcon: <Users className="w-7 h-7" />,
+    //   icon: <Users className="w-6 h-6" />,
+    // },
     {
       href: "/chatbot",
       text: "Chatbot",

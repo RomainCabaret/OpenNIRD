@@ -440,7 +440,6 @@ export default function BossLevelOne() {
             </div>
           )}
 
-          {/* VICTORY & GAMEOVER MODAL */}
           {(gameState === "VICTORY" || gameState === "GAMEOVER") && (
             <GameResultModal
               type={gameState === "VICTORY" ? "success" : "failure"}
