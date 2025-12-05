@@ -7,7 +7,7 @@ function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-// --- SOUS-COMPOSANT : EFFET MACHINE À ÉCRIRE (Inchangé) ---
+// --- SOUS-COMPOSANT : EFFET MACHINE À ÉCRIRE ---
 const TypewriterMessage = ({ text, onComplete }: { text: string; onComplete: () => void }) => {
   const [displayedText, setDisplayedText] = useState("");
   const index = useRef(0);
@@ -132,12 +132,9 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
   };
 
   return (
-    // CORRECTION MOBILE STEP 1 :
-    // On utilise inset-0 et h-[100dvh]. ON RETIRE LE PADDING ICI.
     <div className="absolute inset-0 z-10 flex flex-col justify-between pointer-events-none h-[100dvh]">
       
       {/* HEADER */}
-      {/* CORRECTION MOBILE STEP 2 : On ajoute le padding ici */}
       <div className="flex justify-between items-start pointer-events-auto p-4 md:p-8">
         <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-2 text-xs font-bold text-slate-300">
             <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse shadow-[0_0_15px_red]" />
@@ -151,14 +148,10 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
       </div>
 
       {/* ZONE DE CHAT (Messages + Input) */}
-      {/* CORRECTION MOBILE STEP 3 (LA PLUS IMPORTANTE) : */}
-      {/* On ajoute le padding ici. Le 'pb' (padding-bottom) utilise un calcul */}
-      {/* pour ajouter la zone de sécurité (safe-area) de l'iPhone au padding standard. */}
-      {/* On réinitialise le padding-bottom sur desktop (md:pb-8) */}
+      {/* On garde le padding de sécurité de base */}
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-4 pointer-events-auto shrink-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-8 md:pb-8">
         
         {/* Liste des messages */}
-        {/* J'ai ajusté la hauteur max pour les petits écrans */}
         <div className="flex flex-col gap-3 max-h-[55vh] md:max-h-[300px] overflow-y-auto pr-2 mask-gradient-to-t scrollbar-hide">
           
           {/* Historique */}
@@ -219,6 +212,11 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
             </button>
           </div>
         </div>
+
+        {/* --- ESPACEUR MOBILE POUR LE CLAVIER --- */}
+        <div className="h-32 md:hidden" />
+        {/* --------------------------------------- */}
+
       </div>
     </div>
   );
