@@ -2,9 +2,12 @@ import { useUser } from "@/context/UserContext";
 import { Level } from "@/types/types";
 import { Lock, Play, Star } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export function MobileStoreInterface({ levels }: { levels: Level[] }) {
   const { isLevelUnlocked } = useUser();
+
+  const router = useRouter();
 
   return (
     <div className="h-full w-full min-w-0 overflow-y-auto p-4 md:p-8">
@@ -74,6 +77,11 @@ export function MobileStoreInterface({ levels }: { levels: Level[] }) {
                   </div>
                 </div>
                 <button
+                  onClick={() => {
+                    if (!isLocked) {
+                      router.push(`/niveau/${level.id}`);
+                    }
+                  }}
                   className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 ${
                     isLocked
                       ? "bg-white/5 text-slate-500 cursor-not-allowed"

@@ -1024,7 +1024,7 @@ function LaserArena() {
 }
 
 // --- TRANSITION EFFECT ---
-const TransitionEffect = ({ onComplete }: { onComplete: () => void }) => {
+const TransitionEffect = ({ onComplete, speed = 'fast' }: { onComplete: () => void, speed?: 'slow' | 'fast' }) => {
   const [blocks, setBlocks] = useState<React.ReactNode[]>([]);
 
   useEffect(() => {
@@ -1034,12 +1034,16 @@ const TransitionEffect = ({ onComplete }: { onComplete: () => void }) => {
     const centerX = cols / 2 - 0.5;
     const centerY = rows / 2 - 0.5;
     
+    // Paramètres selon la vitesse
+    const delayFactor = speed === 'slow' ? 0.12 : 0.05; // 0.12 = plus de décalage pour l'effet "vague" lent
+    const animDuration = speed === 'slow' ? 1.2 : 0.5;  // Durée de l'animation d'un bloc
+
     let maxDelay = 0;
 
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         const dist = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-        const delay = dist * 0.05; // seconds
+        const delay = dist * delayFactor;
         if (delay > maxDelay) maxDelay = delay;
 
         newBlocks.push(
@@ -1051,7 +1055,7 @@ const TransitionEffect = ({ onComplete }: { onComplete: () => void }) => {
               top: `${(y / rows) * 100}%`,
               width: `${100 / cols}%`,
               height: `${100 / rows}%`,
-              animation: `revealBlock 0.5s ease-out forwards`,
+              animation: `revealBlock ${animDuration}s ease-out forwards`,
               animationDelay: `${delay}s`,
             }}
           />
@@ -1060,10 +1064,10 @@ const TransitionEffect = ({ onComplete }: { onComplete: () => void }) => {
     }
     setBlocks(newBlocks);
 
-    const totalDuration = (maxDelay + 0.5) * 1000;
+    const totalDuration = (maxDelay + animDuration) * 1000;
     const timer = setTimeout(onComplete, totalDuration);
     return () => clearTimeout(timer);
-  }, []);
+  }, [speed]);
 
   return (
     <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden">
@@ -1103,7 +1107,10 @@ export function Snake3D() {
   const [score, setScore] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false); // NOUVEL ÉTAT
+  
+  // Gestion de la transition
+  const [isTransitioning, setIsTransitioning] = useState(true); // Active au chargement
+  const [transitionSpeed, setTransitionSpeed] = useState<'slow' | 'fast'>('slow'); // Lente par défaut
 
   // Nouveaux états pour l'inventaire et le déblocage
   const [inventory, setInventory] = useState<JunkType[]>([]);
@@ -1115,11 +1122,13 @@ export function Snake3D() {
   // --- ACTIONS ---
   const startGame = () => {
     setGameStarted(true);
-    setIsTransitioning(true); // Lance la transition
+    setTransitionSpeed('fast'); // Rapide pour le début de jeu
+    setIsTransitioning(true);
     setFoodType(getRandomNormalJunk());
   };
 
   const handleReset = () => {
+    setTransitionSpeed('fast'); // Rapide pour le reset
     resetGame();
   };
 
@@ -1258,7 +1267,7 @@ export function Snake3D() {
     setGameOver(false);
     setGameStarted(true);
     setIsPaused(false);
-    setIsTransitioning(true); // Relance la transition au reset
+    setIsTransitioning(true); // Relance la transition au reset (utilisera la vitesse définie avant l'appel)
     setShowUnlockModal(null);
   };
 
@@ -1338,7 +1347,7 @@ export function Snake3D() {
   return (
     <div className="relative h-screen w-full bg-black overflow-hidden font-sans">
       {/* TRANSITION OVERLAY */}
-      {isTransitioning && <TransitionEffect onComplete={() => setIsTransitioning(false)} />}
+      {isTransitioning && <TransitionEffect speed={transitionSpeed} onComplete={() => setIsTransitioning(false)} />}
 
       {/* HUD - TOP BAR */}
       <div className="absolute top-8 left-8 right-8 z-10 flex justify-between items-start pointer-events-none">
