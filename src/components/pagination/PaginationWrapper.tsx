@@ -64,7 +64,7 @@ export function PaginationWrapper({
   return (
     <div
       className={cn(
-        "flex flex-col w-full h-full bg-[#0B1221] text-white relative overflow-hidden",
+        "flex flex-col w-full h-full bg-[#0B1221] text-white relative overflow-hidden max-md:mb-[80px]",
         className
       )}
     >
