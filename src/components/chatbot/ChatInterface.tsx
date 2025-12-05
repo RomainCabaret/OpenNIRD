@@ -25,7 +25,7 @@ export function ChatInterface({ onBotStateChange }: ChatInterfaceProps) {
     {
       id: "1",
       role: "bot",
-      text: "Salut ! Je suis Tom, ton conseiller (très) peu écologique. Pose-moi une question, je te dirai comment consommer plus !",
+      text: "Salut ! Je suis Tom, ton conseiller très écologique. Pose-moi une question, je te dirai comment consommer moins !",
     },
   ]);
   const [isTyping, setIsTyping] = useState(false);
