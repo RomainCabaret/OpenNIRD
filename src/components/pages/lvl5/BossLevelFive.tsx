@@ -16,6 +16,7 @@ import {
   Skull,
   Database,
 } from "lucide-react";
+import { useUser } from "@/context/UserContext";
 
 // --- TYPES & CONSTANTES ---
 
@@ -152,6 +153,8 @@ const HackerBuddy = ({
 // --- COMPOSANT PRINCIPAL ---
 
 export default function PianoTalesGame() {
+  const { completeLevel, unlockLevel } = useUser();
+
   const [gameState, setGameState] = useState<GameState>("MENU");
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
@@ -204,6 +207,7 @@ export default function PianoTalesGame() {
       if (leftBarRef.current) leftBarRef.current.style.height = full;
       if (rightBarRef.current) rightBarRef.current.style.height = full;
       setProgress(100);
+      completeLevel(5);
     }
 
     if (audioRef.current) {
