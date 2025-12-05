@@ -14,7 +14,7 @@ export const LEVELS_XP = [1000, 2000, 5000, 10000, 15000, 20000, 25000, 40000];
 
 // ------- 3D
 
-export const IS_DEBUG = true;
+export const IS_DEBUG = false;
 
 export const GLOBE_RADIUS = 2.5;
 export const MARKER_RADIUS = 2.52;
