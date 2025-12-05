@@ -1118,7 +1118,7 @@ export function Snake3D() {
           if (!hasRatSpawned && eatenType !== JunkType.Rat) availableLegendaries.push(JunkType.Rat);
 
           // Taux 10%
-          if (availableLegendaries.length > 0 && Math.random() < 1.0) {
+          if (availableLegendaries.length > 0 && Math.random() < 0.1) {
              const nextLegendary = availableLegendaries[Math.floor(Math.random() * availableLegendaries.length)];
              setFoodType(nextLegendary);
              if (nextLegendary === JunkType.Tesla) setHasTeslaSpawned(true);
