@@ -76,25 +76,6 @@ export function LessonSlide({
           </div>
         </motion.div>
       </div>
-
-      {/* --- COLONNE DROITE : VISUEL (Optionnel) --- */}
-      {image && (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="w-full md:w-1/3 min-h-[200px] md:h-auto relative rounded-3xl overflow-hidden border-4 border-white/5 bg-black/20 shadow-2xl"
-        >
-          <Image
-            src={image}
-            alt={title}
-            fill
-            className="object-cover hover:scale-105 transition-transform duration-700"
-          />
-          {/* Overlay gradient pour le style */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0B1221] via-transparent to-transparent opacity-60" />
-        </motion.div>
-      )}
     </div>
   );
 }
