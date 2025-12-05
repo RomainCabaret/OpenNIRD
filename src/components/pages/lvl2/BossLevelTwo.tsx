@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import GameResultModal from "@/components/Modal/GameResultModal";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 
 // --- TYPES & INTERFACES ---
 
@@ -523,6 +524,8 @@ const PacmanNeo: React.FC = () => {
     [gameState]
   );
 
+  const { completeLevel, unlockLevel } = useUser();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const keyMap: { [key: string]: Vector } = {
@@ -705,6 +708,8 @@ const PacmanNeo: React.FC = () => {
 
     if (state.ghostLife <= 0) {
       setGameState("won");
+      completeLevel(2);
+      unlockLevel(3);
       playSound("win", soundEnabled);
     }
 
