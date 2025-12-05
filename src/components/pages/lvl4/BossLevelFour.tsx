@@ -109,7 +109,7 @@ export default function CookieDestroyer() {
 
   // Game Phase
   const [gameState, setGameState] = useState<"PLAYING" | "BOSS" | "VICTORY">(
-    "VICTORY"
+    "PLAYING"
   );
   const [bossButtons, setBossButtons] = useState<BossButton[]>([]);
   const [bossButtonsRemaining, setBossButtonsRemaining] = useState<number>(10);
