@@ -186,7 +186,7 @@ export function PaginationWrapper({
       {/* --- FOOTER : CONTRÔLES --- */}
       <div
         className={cn(
-          "p-6 md:px-12 flex justify-between items-center border-t border-white/5 bg-[#0B1221]/90 backdrop-blur-md z-20 mb-[20px]",
+          "p-6 md:px-12 flex justify-between items-center border-t border-white/5 bg-[#0B1221]/90 backdrop-blur-md z-20 mb-[80px]",
           currentPage === totalPages && miniGame && "hidden"
         )}
       >

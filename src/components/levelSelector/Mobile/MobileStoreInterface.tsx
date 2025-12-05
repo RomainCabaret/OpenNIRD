@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export function MobileStoreInterface({ levels }: { levels: Level[] }) {
-  const { isLevelUnlocked } = useUser();
+  const { isLevelUnlocked, isLevelCompleted } = useUser();
 
   const router = useRouter();
 
@@ -35,9 +35,7 @@ export function MobileStoreInterface({ levels }: { levels: Level[] }) {
 
       <div className="grid grid-cols-1 gap-6 pb-20">
         {levels.map((level, index) => {
-          const progress = Math.round(
-            (level.collected / level.collectibles) * 100
-          );
+          const progress = isLevelCompleted(level.id) ? 100 : 0;
 
           const isUnlocked = isLevelUnlocked(index + 1);
           const isLocked = !isUnlocked;
