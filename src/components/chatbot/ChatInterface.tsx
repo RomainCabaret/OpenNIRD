@@ -7,32 +7,30 @@ function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-// --- NOUVEAU SOUS-COMPOSANT : EFFET MACHINE À ÉCRIRE ---
-// Il affiche le texte caractère par caractère.
+// --- SOUS-COMPOSANT : EFFET MACHINE À ÉCRIRE (Inchangé) ---
 const TypewriterMessage = ({ text, onComplete }: { text: string; onComplete: () => void }) => {
   const [displayedText, setDisplayedText] = useState("");
   const index = useRef(0);
-  const hasCompleted = useRef(false); // Pour éviter d'appeler onComplete plusieurs fois
+  const hasCompleted = useRef(false);
 
   useEffect(() => {
     hasCompleted.current = false;
     index.current = 0;
     setDisplayedText("");
 
-    const typingSpeed = 30; // Vitesse de frappe en ms (plus bas = plus vite)
+    // Vitesse de frappe
+    const typingSpeed = 30;
 
     const timer = setInterval(() => {
-      // Si on n'est pas arrivé à la fin du texte
       if (index.current < text.length - 1) {
         setDisplayedText((prev) => prev + text.charAt(index.current));
         index.current++;
       } else {
-        // Fin du texte atteinte
-        setDisplayedText(text); // S'assurer que tout est affiché
+        setDisplayedText(text);
         clearInterval(timer);
         if (!hasCompleted.current) {
             hasCompleted.current = true;
-            onComplete(); // On signale au parent que c'est fini
+            onComplete();
         }
       }
     }, typingSpeed);
@@ -58,7 +56,6 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
-  // Historique des messages TERMINEÉS
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -67,33 +64,26 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
     },
   ]);
   
-  // NOUVEL ÉTAT : stocke le texte du message que le bot est en train de taper actuellement
   const [streamingMessage, setStreamingMessage] = useState<string | null>(null);
-  
-  const [isTyping, setIsTyping] = useState(false); // L'état "..." (les 3 petits points)
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // On scroll quand l'historique change OU quand le texte en cours de frappe change
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping, streamingMessage]);
 
-  // --- NOUVELLE FONCTION : Gère la fin de l'effet machine à écrire ---
   const handleTypewriterComplete = useCallback(() => {
     if (streamingMessage) {
-        // 1. On ajoute le message finalisé à l'historique
         setMessages((prev) => [...prev, {
             id: Date.now().toString(),
             role: "bot",
             text: streamingMessage
         }]);
-        // 2. On vide le message temporaire
         setStreamingMessage(null);
-        // 3. On arrête les lèvres du chat exactement à ce moment
         onBotStateChange(false);
     }
   }, [streamingMessage, onBotStateChange]);
@@ -104,12 +94,11 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
 
     const userText = input;
     
-    // Ajout message utilisateur
     setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user", text: userText }]);
     setInput("");
-    setIsTyping(true); // Affiche les "..."
+    setIsTyping(true);
     
-    onBotStateChange(true); // Le chat commence à bouger les lèvres (réflexion)
+    onBotStateChange(true);
     onEmotionChange("NEUTRAL");
 
     try {
@@ -126,19 +115,11 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
       const aiEmotion = data.emotion || "NEUTRAL";
 
       onEmotionChange(aiEmotion);
-      setIsTyping(false); // On cache les "..."
-
-      // --- CHANGEMENT MAJEUR ICI ---
-      // Au lieu d'ajouter le message à l'historique et de calculer un temps,
-      // on déclenche l'affichage progressif.
+      setIsTyping(false);
       setStreamingMessage(aiResponseText);
-      
-      // NOTE: onBotStateChange(false) n'est plus appelé ici avec un setTimeout.
-      // Il sera appelé par handleTypewriterComplete quand le texte aura fini de s'afficher.
 
     } catch (error) {
       console.error("Erreur API:", error);
-      // En cas d'erreur, pas d'effet machine à écrire, on affiche direct
       setMessages((prev) => [...prev, { 
         id: Date.now().toString(), 
         role: "bot", 
@@ -151,9 +132,13 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
   };
 
   return (
-    <div className="absolute inset-0 z-10 flex flex-col justify-between p-4 md:p-8 pointer-events-none">
+    // CORRECTION MOBILE STEP 1 :
+    // On utilise inset-0 et h-[100dvh]. ON RETIRE LE PADDING ICI.
+    <div className="absolute inset-0 z-10 flex flex-col justify-between pointer-events-none h-[100dvh]">
+      
       {/* HEADER */}
-      <div className="flex justify-between items-start pointer-events-auto">
+      {/* CORRECTION MOBILE STEP 2 : On ajoute le padding ici */}
+      <div className="flex justify-between items-start pointer-events-auto p-4 md:p-8">
         <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-2 text-xs font-bold text-slate-300">
             <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse shadow-[0_0_15px_red]" />
             BAD ADVISOR ONLINE
@@ -165,35 +150,42 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
         </div>
       </div>
 
-      {/* ZONE DE CHAT */}
-      <div className="w-full max-w-2xl mx-auto flex flex-col gap-4 pointer-events-auto">
-        <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-2 mask-gradient-to-t scrollbar-hide">
+      {/* ZONE DE CHAT (Messages + Input) */}
+      {/* CORRECTION MOBILE STEP 3 (LA PLUS IMPORTANTE) : */}
+      {/* On ajoute le padding ici. Le 'pb' (padding-bottom) utilise un calcul */}
+      {/* pour ajouter la zone de sécurité (safe-area) de l'iPhone au padding standard. */}
+      {/* On réinitialise le padding-bottom sur desktop (md:pb-8) */}
+      <div className="w-full max-w-2xl mx-auto flex flex-col gap-4 pointer-events-auto shrink-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-8 md:pb-8">
+        
+        {/* Liste des messages */}
+        {/* J'ai ajusté la hauteur max pour les petits écrans */}
+        <div className="flex flex-col gap-3 max-h-[55vh] md:max-h-[300px] overflow-y-auto pr-2 mask-gradient-to-t scrollbar-hide">
           
-          {/* 1. Affichage de l'historique des messages terminés */}
+          {/* Historique */}
           {messages.map((m) => (
             <div
               key={m.id}
               className={cn(
                 "p-4 rounded-2xl max-w-[80%] text-sm font-medium backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-bottom-2",
                 m.role === "user"
-                  ? "self-end bg-[#00E5FF]/20 border border-[#00E5FF]/30 text-white rounded-tr-none"
-                  : "self-start bg-red-950/80 border border-red-500/50 text-red-100 rounded-tl-none shadow-[0_0_15px_rgba(220,38,38,0.2)]"
+                  ? "self-end bg-[#00E5FF]/10 border border-[#00E5FF]/20 text-white rounded-tr-none"
+                  : "self-start bg-red-950/30 border border-red-500/30 text-red-100 rounded-tl-none shadow-[0_0_15px_rgba(220,38,38,0.1)]"
               )}
             >
               {m.text}
             </div>
           ))}
 
-           {/* 2. Affichage du message en cours de frappe (Typewriter effect) */}
+           {/* Message en cours de frappe */}
            {streamingMessage && (
-            <div className="self-start bg-red-950/80 border border-red-500/50 p-4 rounded-2xl rounded-tl-none text-red-100 max-w-[80%] text-sm font-medium backdrop-blur-md shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+            <div className="self-start bg-red-950/30 border border-red-500/30 p-4 rounded-2xl rounded-tl-none text-red-100 max-w-[80%] text-sm font-medium backdrop-blur-md shadow-[0_0_15px_rgba(220,38,38,0.1)]">
                 <TypewriterMessage text={streamingMessage} onComplete={handleTypewriterComplete} />
             </div>
           )}
           
-          {/* 3. Indicateur de frappe (les 3 petits points avant que le texte n'arrive) */}
+          {/* Indicateur ... */}
           {isTyping && !streamingMessage && (
-            <div className="self-start bg-red-950/80 border border-red-500/50 px-4 py-3 rounded-2xl rounded-tl-none text-red-200 text-xs flex gap-1 items-center animate-pulse">
+            <div className="self-start bg-red-950/30 border border-red-500/30 px-4 py-3 rounded-2xl rounded-tl-none text-red-200 text-xs flex gap-1 items-center animate-pulse">
               <span>Tom réfléchit à une bêtise</span>
               <span className="animate-bounce delay-75">.</span>
               <span className="animate-bounce delay-150">.</span>
@@ -203,7 +195,7 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar (Inchangée) */}
+        {/* Input Bar */}
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-[#00E5FF]/20 to-blue-600/20 rounded-2xl blur-xl group-hover:opacity-100 transition-opacity opacity-50" />
           <div className="relative flex items-center gap-2 bg-[#0B1221]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-2 pr-2 shadow-2xl">
