@@ -88,7 +88,7 @@ export async function POST(req: Request) {
             { role: "user", content: message },
           ],
           model: modelName,
-          temperature: 0.7,
+          temperature: 0.8,
           max_tokens: 150,
         });
 
