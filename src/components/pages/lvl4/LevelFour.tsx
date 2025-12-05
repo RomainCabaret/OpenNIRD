@@ -1,9 +1,21 @@
+"use client";
+
 import { LessonSlide } from "@/components/levelSelector/LessonSlide";
 import { PaginationWrapper } from "@/components/pagination/PaginationWrapper";
-import React from "react";
+import React, { useEffect } from "react";
 import BossLevelFour from "./BossLevelFour";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 
 function LevelFour() {
+  const router = useRouter();
+  const { completeLevel, isLevelUnlocked } = useUser();
+
+  useEffect(() => {
+    if (!isLevelUnlocked(4)) {
+      router.push("/");
+    }
+  }, []);
   return (
     <PaginationWrapper
       title="Module 4 : Les Abysses"
