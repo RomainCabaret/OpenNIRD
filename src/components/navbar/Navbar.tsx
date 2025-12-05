@@ -72,6 +72,7 @@ export const Navbar = ({ className = "" }: Props) => {
       />
 
       <nav
+        id="navbar"
         className={cn(
           "fixed bottom-0 left-0 right-0 z-[1000] flex h-[80px] w-full items-center justify-between bg-[#0B1221] px-8 shadow-[0_-4px_20px_rgba(0,0,0,0.2)] md:hidden border-t border-white/10",
           className
