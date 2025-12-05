@@ -178,7 +178,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const isLevelCompleted = (levelId: number): boolean => {
-    return user.levels[levelId]?.unlocked || false;
+    return user.levels[levelId]?.completed || false;
   };
 
   const getLevelData = (levelId: number): LevelProgress => {

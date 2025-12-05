@@ -15,7 +15,11 @@ import {
   TrendingDown,
   DollarSign,
   LucideIcon,
+  Map,
 } from "lucide-react";
+import { useUser } from "@/context/UserContext";
+import { levels } from "@/data/levels-data";
+import { useRouter } from "next/navigation";
 
 // --- TYPES & INTERFACES ---
 
@@ -433,6 +437,9 @@ const PacmanNeo: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const requestRef = useRef<number | null>(null);
 
+  const { completeLevel, unlockLevel } = useUser();
+  const router = useRouter();
+
   // Initialisation de l'état du jeu avec des valeurs par défaut pour satisfaire TypeScript
   // Ces valeurs seront écrasées par initGame
   const gameRef = useRef<GameState>({
@@ -704,6 +711,8 @@ const PacmanNeo: React.FC = () => {
     if (state.ghostLife <= 0) {
       setGameState("won");
       playSound("win", soundEnabled);
+      completeLevel(1);
+      unlockLevel(2);
     }
 
     // --- RENDER ---
@@ -912,32 +921,98 @@ const PacmanNeo: React.FC = () => {
               <p className="text-red-200 font-mono mb-6 text-sm">
                 {timeLeft <= 0 ? "Temps écoulé !" : `Reste: ${ghostLife}`}
               </p>
-              <button
-                onClick={initGame}
-                className="flex items-center gap-2 px-6 py-2 bg-white text-red-600 font-bold rounded-full shadow-lg"
-              >
-                <RefreshCw size={20} />
-                Rejouer
-              </button>
             </div>
           )}
 
           {gameState === "won" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-green-900/95 backdrop-blur-md rounded-lg z-20">
-              <Trophy className="w-16 h-16 text-yellow-300 mb-2 animate-pulse" />
-              <h2 className="text-3xl font-black text-white mb-2">VICTOIRE</h2>
-              <p className="text-green-200 font-mono mb-6 text-sm">
-                Score: {score}
-              </p>
-              <button
-                onClick={initGame}
-                className="flex items-center gap-2 px-6 py-2 bg-white text-green-600 font-bold rounded-full shadow-lg"
-              >
-                <RefreshCw size={20} />
-                Rejouer
-              </button>
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl p-4 animate-[fadeIn_0.5s_ease-out]">
+              {/* Effet de lumière d'arrière-plan */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-green-500/20 rounded-full blur-[100px] pointer-events-none" />
+
+              {/* Contenu Principal */}
+              <div className="relative flex flex-col items-center text-center space-y-8 animate-[scaleUp_0.4s_ease-out_0.2s_both]">
+                {/* Titre et Trophée */}
+                <div className="flex flex-col items-center">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-yellow-500 blur-2xl opacity-30 animate-pulse" />
+                    <Trophy className="w-24 h-24 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] mb-4 relative z-10" />
+                  </div>
+                  <h2 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 via-yellow-100 to-yellow-500 uppercase tracking-tighter">
+                    Victoire !
+                  </h2>
+                  <p className="text-green-400 font-mono tracking-widest mt-2 uppercase text-sm">
+                    GAFAM Éliminés
+                  </p>
+                </div>
+
+                {/* Carte de Score */}
+                <div className="bg-slate-800/50 border border-slate-700/50 p-8 rounded-2xl shadow-2xl backdrop-blur-sm min-w-[320px]">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+                      <span className="text-slate-400 uppercase text-xs font-bold tracking-wider">
+                        Score Final
+                      </span>
+                      <span className="text-3xl font-mono font-bold text-white">
+                        {score}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400 uppercase text-xs font-bold tracking-wider">
+                        Temps Restant
+                      </span>
+                      <span className="text-xl font-mono text-blue-400">
+                        {formatTime(timeLeft)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Boutons d'action */}
+                <div className="flex flex-col w-full max-w-[320px] gap-3">
+                  {/* Bouton Next / Retour Carte (Principal) */}
+                  <button
+                    onClick={() => {
+                      router.push(`/`);
+                    }}
+                    className="group relative w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:-translate-y-1 overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                    <div className="flex items-center justify-center gap-2">
+                      <Map size={24} />
+                      <span className="text-lg">RETOUR À LA CARTE</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
+
+          {/* Styles d'animation nécessaires si tu n'as pas configuré Tailwind extended */}
+          <style jsx>{`
+            @keyframes scaleUp {
+              from {
+                transform: scale(0.8);
+                opacity: 0;
+              }
+              to {
+                transform: scale(1);
+                opacity: 1;
+              }
+            }
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+              }
+              to {
+                opacity: 1;
+              }
+            }
+            @keyframes shimmer {
+              100% {
+                transform: translateX(100%);
+              }
+            }
+          `}</style>
         </div>
 
         {/* MASCOTTE BOSS À DROITE (Uniquement sur Desktop) */}
