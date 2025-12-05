@@ -1,5 +1,6 @@
 "use client";
 
+import LOGO from "@/img/LogoNuitInfoF3.png";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft,
@@ -17,6 +18,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SettingsModal } from "../Modal/SettingsModal";
+import Image from "next/image";
+import { GlobalIcon } from "../globalIcon/GlobalIcon";
 
 interface Props {
   className?: string;
@@ -113,7 +116,10 @@ export const Navbar = ({ className = "" }: Props) => {
               isCollapsed ? "justify-center px-0" : ""
             )}
           >
-            <h1>OpenNIRD</h1>
+            <div className="w-[200px] mx-auto">
+              <img src="/LogoNuitInfoF3.png" alt="" />
+            </div>
+
             {/*}
             <Link href="/" className="flex items-center gap-3">
               <div className="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-xl bg-gradient-to-br from-[#00E5FF] to-[#0099FF] text-white shadow-[0_0_15px_rgba(0,229,255,0.3)]">

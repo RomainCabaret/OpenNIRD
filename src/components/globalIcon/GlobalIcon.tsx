@@ -20,7 +20,7 @@ export const GlobalIcon = ({
         src={img}
         alt={alt}
         fill
-        className={cn("object-cover", imgClassName)}
+        className={cn("", imgClassName)}
       />
     </div>
   );
