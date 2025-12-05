@@ -824,23 +824,25 @@ const PacmanNeo: React.FC = () => {
     icon: LucideIcon;
     onClick: () => void;
   }
-
   const ArrowButton: React.FC<ArrowButtonProps> = ({
-    dir,
-    icon: Icon,
-    onClick,
-  }) => (
-    <button
-      className="w-10 h-10 bg-gray-800 border-2 border-blue-500 rounded-lg flex items-center justify-center active:scale-95 active:bg-blue-900/50 transition-all shadow-[0_0_10px_rgba(59,130,246,0.3)] touch-manipulation"
-      onClick={onClick}
-      onPointerDown={(e) => {
-        e.preventDefault();
-        onClick();
-      }}
-    >
-      <Icon size={20} className="text-blue-400" />
-    </button>
-  );
+  dir,
+  icon: Icon,
+  onClick,
+}) => (
+  <button
+    // CHANGEMENT ICI : Passage à w-16 h-16 (64px) sur mobile
+    // La taille desktop reste à sm:w-10 sm:h-10 (40px)
+    className="w-16 h-16 sm:w-10 sm:h-10 bg-gray-800 border-2 border-blue-500 rounded-lg flex items-center justify-center active:scale-95 active:bg-blue-900/50 transition-all shadow-[0_0_10px_rgba(59,130,246,0.3)] touch-manipulation"
+    onClick={onClick}
+    onPointerDown={(e) => {
+      e.preventDefault();
+      onClick();
+    }}
+  >
+    {/* CHANGEMENT ICÔNE : Passage à w-8 h-8 (32px) sur mobile pour équilibrer */}
+    <Icon className="w-8 h-8 sm:w-5 sm:h-5 text-blue-400" />
+  </button>
+);
 
   const router = useRouter();
 

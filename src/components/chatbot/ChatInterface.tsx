@@ -3,11 +3,22 @@
 import { Mic, Send, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
 
+// --- MODIFICATION VOCALE : DÉFINITION TYPESCRIPT ---
+// On doit dire à TypeScript que ces APIs existent sur l'objet 'window'
+// car elles ne sont pas encore standardisées partout.
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+    SpeechRecognition: any;
+  }
+}
+// --------------------------------------------------
+
 function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-// --- SOUS-COMPOSANT : EFFET MACHINE À ÉCRIRE ---
+// --- SOUS-COMPOSANT : EFFET MACHINE À ÉCRIRE (Inchangé) ---
 const TypewriterMessage = ({ text, onComplete }: { text: string; onComplete: () => void }) => {
   const [displayedText, setDisplayedText] = useState("");
   const index = useRef(0);
@@ -68,6 +79,13 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // --- MODIFICATION VOCALE : ÉTATS ET REFS ---
+  // Pour savoir si on est en train d'enregistrer
+  const [isRecording, setIsRecording] = useState(false);
+  // Pour stocker l'instance de reconnaissance vocale sans provoquer de re-rendu
+  const recognitionRef = useRef<any>(null);
+  // -------------------------------------------
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -75,6 +93,70 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping, streamingMessage]);
+
+
+  // --- MODIFICATION VOCALE : INITIALISATION DE LA RECONNAISSANCE ---
+  useEffect(() => {
+    // On vérifie si le navigateur supporte l'API (Chrome, Safari, Edge)
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false; // On veut des phrases courtes, pas une dictée longue
+      recognition.interimResults = false; // On attend le résultat final
+      recognition.lang = 'fr-FR'; // Important : on configure en Français
+
+      // Quand l'enregistrement commence
+      recognition.onstart = () => {
+        setIsRecording(true);
+      };
+
+      // Quand l'enregistrement s'arrête (soit par l'utilisateur, soit silence)
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      // Quand du texte est détecté
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        // On met le texte directement dans l'input
+        setInput(prevInput => (prevInput ? prevInput + " " + transcript : transcript));
+      };
+      
+      // En cas d'erreur (ex: permission refusée)
+      recognition.onerror = (event: any) => {
+        console.error("Erreur reconnaissance vocale:", event.error);
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+
+    // Nettoyage si le composant est démonté
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  // Fonction pour activer/désactiver le micro au clic
+  const handleMicToggle = useCallback(() => {
+    if (!recognitionRef.current) {
+      alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
+      return;
+    }
+
+    if (isRecording) {
+      recognitionRef.current.stop();
+    } else {
+      // Si on commence à enregistrer, on peut vider l'input précédent si on veut
+      // setInput(""); 
+      recognitionRef.current.start();
+    }
+  }, [isRecording]);
+  // ----------------------------------------------------------------
+
 
   const handleTypewriterComplete = useCallback(() => {
     if (streamingMessage) {
@@ -134,7 +216,7 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
   return (
     <div className="absolute inset-0 z-10 flex flex-col justify-between pointer-events-none h-[100dvh]">
       
-      {/* HEADER */}
+      {/* HEADER (Inchangé) */}
       <div className="flex justify-between items-start pointer-events-auto p-4 md:p-8">
         <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-2 text-xs font-bold text-slate-300">
             <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse shadow-[0_0_15px_red]" />
@@ -151,9 +233,8 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
       {/* On garde le padding de sécurité de base */}
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-4 pointer-events-auto shrink-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-8 md:pb-8">
         
-        {/* Liste des messages */}
+        {/* Liste des messages (Inchangée) */}
         <div className="flex flex-col gap-3 max-h-[55vh] md:max-h-[300px] overflow-y-auto pr-2 mask-gradient-to-t scrollbar-hide">
-          
           {/* Historique */}
           {messages.map((m) => (
             <div
@@ -196,16 +277,32 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !isTyping && !streamingMessage && handleSend()}
-              placeholder={isTyping || streamingMessage ? "Chut, il parle..." : "Demande un conseil écolo..."}
-              disabled={isTyping || streamingMessage !== null}
+              placeholder={isTyping || streamingMessage ? "Chut, il parle..." : isRecording ? "Parlez maintenant..." : "Demande un conseil écolo..."}
+              disabled={isTyping || streamingMessage !== null || isRecording}
               className="flex-1 bg-transparent border-none outline-none px-4 text-white placeholder:text-slate-500 font-medium disabled:opacity-50"
             />
-            <button className="p-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
-              <Mic className="w-5 h-5" />
+            
+            {/* --- MODIFICATION VOCALE : LE BOUTON MICRO --- */}
+            <button 
+              onClick={handleMicToggle}
+              // On désactive si le bot parle déjà
+              disabled={isTyping || streamingMessage !== null}
+              // Changement de style dynamique : rouge et pulsant si on enregistre
+              className={cn(
+                "p-3 rounded-xl transition-all",
+                isRecording 
+                  ? "text-red-500 bg-red-500/20 animate-pulse hover:bg-red-500/30 scale-110" 
+                  : "text-slate-400 hover:text-white hover:bg-white/10"
+              )}
+            >
+              {/* L'icône se remplit si on enregistre */}
+              <Mic className={cn("w-5 h-5", isRecording && "fill-current")} />
             </button>
+            {/* --------------------------------------------- */}
+
             <button
               onClick={handleSend}
-              disabled={!input.trim() || isTyping || streamingMessage !== null}
+              disabled={!input.trim() || isTyping || streamingMessage !== null || isRecording}
               className="p-3 bg-gradient-to-r from-[#00E5FF] to-[#0099FF] text-white rounded-xl shadow-lg hover:shadow-[#00E5FF]/25 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-5 h-5 fill-current" />
@@ -213,9 +310,8 @@ export function ChatInterface({ onBotStateChange, onEmotionChange }: ChatInterfa
           </div>
         </div>
 
-        {/* --- ESPACEUR MOBILE POUR LE CLAVIER --- */}
+        {/* Espaceur Mobile */}
         <div className="h-32 md:hidden" />
-        {/* --------------------------------------- */}
 
       </div>
     </div>
