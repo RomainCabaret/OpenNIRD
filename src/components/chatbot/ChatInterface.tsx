@@ -2,8 +2,8 @@
 
 import { Mic, Send, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { getBadAdvice } from "@/lib/cat-brain";
 
+// Fonction utilitaire pour les classes conditionnelles
 function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(" ");
 }
@@ -20,6 +20,7 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ onBotStateChange }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
+  // Message d'accueil par défaut
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -30,48 +31,82 @@ export function ChatInterface({ onBotStateChange }: ChatInterfaceProps) {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Scroll automatique vers le bas à chaque nouveau message
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
 
     const userText = input;
+    
+    // 1. Ajout immédiat du message utilisateur
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
       text: userText,
     };
+    
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
+    
+    // On active l'animation du chat (il "écoute/réfléchit")
+    onBotStateChange(true);
 
-    // Simulation délai de réponse
-    const thinkingTime = 800 + Math.random() * 1000;
+    try {
+      // 2. Appel à l'API Gemini (Server-side)
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: userText }),
+      });
 
-    setTimeout(() => {
-      onBotStateChange(true); 
+      if (!response.ok) {
+        throw new Error("Erreur réseau");
+      }
 
-      const badAdvice = getBadAdvice(userText);
+      const data = await response.json();
+      const aiResponse = data.text;
 
+      // 3. Ajout de la réponse du Bot
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "bot",
-        text: badAdvice,
+        text: aiResponse,
       };
 
       setMessages((prev) => [...prev, botMsg]);
+
+      // 4. Gestion de l'animation de parole (Lip-sync approximatif)
+      // On estime le temps de lecture : ~50ms par caractère, minimum 2 secondes
+      const speakingTime = Math.max(2000, aiResponse.length * 50);
+
+      // Le chat reste en état "talking" pendant ce temps, puis s'arrête
+      setTimeout(() => {
+        onBotStateChange(false);
+      }, speakingTime);
+
+    } catch (error) {
+      console.error("Erreur lors de la communication avec le chat:", error);
+      
+      // Fallback en cas d'erreur API
+      setMessages((prev) => [...prev, { 
+        id: Date.now().toString(), 
+        role: "bot", 
+        text: "Oups, mes serveurs polluants sont en surchauffe. Réessaie plus tard !" 
+      }]);
+      onBotStateChange(false);
+    } finally {
       setIsTyping(false);
-
-      const speakingTime = Math.max(2000, badAdvice.length * 60);
-      setTimeout(() => onBotStateChange(false), speakingTime);
-
-    }, thinkingTime);
+    }
   };
 
   return (
@@ -106,9 +141,14 @@ export function ChatInterface({ onBotStateChange }: ChatInterfaceProps) {
               {m.text}
             </div>
           ))}
+          
+          {/* Indicateur de frappe (Typing Indicator) */}
           {isTyping && (
-            <div className="self-start bg-red-950/80 border border-red-500/50 px-4 py-3 rounded-2xl rounded-tl-none text-red-200 text-xs animate-pulse">
-              Tom prépare une bêtise...
+            <div className="self-start bg-red-950/80 border border-red-500/50 px-4 py-3 rounded-2xl rounded-tl-none text-red-200 text-xs flex gap-1 items-center animate-pulse">
+              <span>Tom réfléchit à une bêtise</span>
+              <span className="animate-bounce delay-75">.</span>
+              <span className="animate-bounce delay-150">.</span>
+              <span className="animate-bounce delay-300">.</span>
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -121,16 +161,18 @@ export function ChatInterface({ onBotStateChange }: ChatInterfaceProps) {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Demande un conseil écolo (ou pas)..."
-              className="flex-1 bg-transparent border-none outline-none px-4 text-white placeholder:text-slate-500 font-medium"
+              onKeyDown={(e) => e.key === "Enter" && !isTyping && handleSend()}
+              placeholder={isTyping ? "Attends, il réfléchit..." : "Demande un conseil écolo (ou pas)..."}
+              disabled={isTyping}
+              className="flex-1 bg-transparent border-none outline-none px-4 text-white placeholder:text-slate-500 font-medium disabled:opacity-50"
             />
             <button className="p-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
               <Mic className="w-5 h-5" />
             </button>
             <button
               onClick={handleSend}
-              className="p-3 bg-gradient-to-r from-[#00E5FF] to-[#0099FF] text-white rounded-xl shadow-lg hover:shadow-[#00E5FF]/25 hover:scale-105 transition-all"
+              disabled={!input.trim() || isTyping}
+              className="p-3 bg-gradient-to-r from-[#00E5FF] to-[#0099FF] text-white rounded-xl shadow-lg hover:shadow-[#00E5FF]/25 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-5 h-5 fill-current" />
             </button>
