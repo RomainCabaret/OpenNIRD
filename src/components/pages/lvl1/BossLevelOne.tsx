@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import GameResultModal from "@/components/Modal/GameResultModal";
 
 // --- CONSTANTES DU JEU ---
 const CANVAS_WIDTH = 800;
@@ -130,6 +131,7 @@ export default function BossLevelOne() {
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
+    if (!ctx) return;
     const { ball, paddle, bricks, particles } = gameRef.current;
     let { roofHP } = gameRef.current;
 
@@ -438,84 +440,16 @@ export default function BossLevelOne() {
             </div>
           )}
 
-          {/* VICTORY & GAMEOVER MODAL */}
           {(gameState === "VICTORY" || gameState === "GAMEOVER") && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-md z-50 animate-in fade-in zoom-in duration-300">
-              <div className="flex flex-col items-center">
-                <div className="relative mb-6">
-                  <div
-                    className={`absolute inset-0 blur-xl opacity-40 rounded-full ${
-                      gameState === "VICTORY" ? "bg-yellow-500" : "bg-red-500"
-                    }`}
-                  ></div>
-                  {gameState === "VICTORY" ? (
-                    <Trophy
-                      size={80}
-                      className="text-yellow-400 relative z-10 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]"
-                    />
-                  ) : (
-                    <AlertTriangle
-                      size={80}
-                      className="text-red-500 relative z-10 drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]"
-                    />
-                  )}
-                </div>
-
-                <h2 className="text-5xl font-black text-white tracking-wide mb-2 uppercase drop-shadow-md">
-                  {gameState === "VICTORY" ? "VICTOIRE !" : "ÉCHEC !"}
-                </h2>
-                <p
-                  className={`text-sm tracking-[0.2em] font-medium mb-8 ${
-                    gameState === "VICTORY" ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  {gameState === "VICTORY"
-                    ? "TOIT DÉTRUIT - ACCÈS ACCORDÉ"
-                    : "CONNEXION PERDUE - PIRATAGE ÉCHOUÉ"}
-                </p>
-
-                <div className="bg-[#0F172A] border border-white/10 rounded-2xl p-6 w-80 mb-6 shadow-xl">
-                  <div className="flex justify-between items-end border-b border-white/5 pb-4 mb-4">
-                    <span className="text-xs font-bold text-gray-500 uppercase">
-                      Score Final
-                    </span>
-                    <span className="text-3xl font-bold text-white">
-                      {score}
-                    </span>
-                  </div>
-                  {gameState === "GAMEOVER" && (
-                    <div className="text-center text-xs text-red-400 font-mono">
-                      Vies épuisées
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-3 w-80">
-                  <button
-                    onClick={() => {
-                      router.push(`/`);
-                    }}
-                    className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20"
-                  >
-                    <MapIcon size={18} />
-                    RETOUR À LA CARTE
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      resetGame(true);
-                      setGameState("MENU");
-                    }}
-                    className="w-full py-3 bg-[#1E293B] hover:bg-[#334155] text-gray-300 font-medium rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/5"
-                  >
-                    <RefreshCw size={18} />
-                    {gameState === "VICTORY"
-                      ? "Rejouer le niveau"
-                      : "Réessayer"}
-                  </button>
-                </div>
-              </div>
-            </div>
+            <GameResultModal
+              type={gameState === "VICTORY" ? "success" : "failure"}
+              score={score}
+              onExit={() => router.push("/")}
+              onRestart={() => {
+                resetGame(true);
+                setGameState("MENU");
+              }}
+            />
           )}
         </div>
       </main>
