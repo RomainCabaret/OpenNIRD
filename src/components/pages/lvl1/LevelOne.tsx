@@ -1,14 +1,14 @@
+"use client";
 import { LessonSlide } from "@/components/levelSelector/LessonSlide";
 import { PaginationWrapper } from "@/components/pagination/PaginationWrapper";
 import React from "react";
 import BossLevelOne from "./BossLevelOne";
-import CyberBrickBreaker from "./BossBrick";
 
 function LevelOne() {
   return (
     <PaginationWrapper
       title="Module 1 : Les Abysses"
-      miniGame={<CyberBrickBreaker />} // Le Boss est passé ici
+      miniGame={<BossLevelOne />} // Le Boss est passé ici
     >
       {/* --- PAGE 1 --- */}
       <LessonSlide
