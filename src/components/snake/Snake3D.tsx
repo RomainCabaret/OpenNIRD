@@ -34,6 +34,8 @@ enum JunkType {
   Tardis = "Tardis",     // LÉGENDAIRE 3 (Doctor Who)
   SpaceCore = "SpaceCore", // LÉGENDAIRE 4 (Portal 2)
   WallE = "WallE",         // LÉGENDAIRE 5 (Wall-E)
+  FiatPunto = "FiatPunto", // LÉGENDAIRE 6
+  Rat = "Rat",             // LÉGENDAIRE 7
 }
 
 // MAPPING POUR L'UI (Noms, Descriptions et Icônes 2D)
@@ -58,6 +60,8 @@ const JUNK_INFO: Record<JunkType, { name: string; desc: string; icon: string; le
   [JunkType.Tardis]: { name: "Cabine Bleue", desc: "C'est plus grand à l'intérieur !", icon: "🟦", legendary: true },
   [JunkType.SpaceCore]: { name: "Sphère Espace", desc: "ESPACE ! JE SUIS DANS L'ESPACE ! OH OUAIS !", icon: "🤪", legendary: true },
   [JunkType.WallE]: { name: "Petit Compacteur", desc: "Il cherche une plante verte désespérément.", icon: "♻️", legendary: true },
+  [JunkType.FiatPunto]: { name: "La Punto", desc: "Simultanément fiable et en ruine, on sait pas comment c'est possible.", icon: "🚙", legendary: true },
+  [JunkType.Rat]: { name: "Rat Cosmique", desc: "Longue vie aux rats <3", icon: "🐀", legendary: true },
 };
 
 // --- COULEURS THEME ESPACE ---
@@ -81,6 +85,13 @@ const COLORS = {
   hddSilver: "#e2e8f0",
   routerBlack: "#0f172a",
   ledBlue: "#3b82f6",
+
+  // Punto & Rat
+  puntoGreen: "#166534", // Vert bouteille classique (inutilisé maintenant)
+  puntoGrey: "#d1d5db",  // Gris clair pour le châssis
+  puntoGlass: "#94a3b8",
+  ratGrey: "#475569",
+  ratPink: "#fda4af",
 
   teslaRed: "#dc2626",
   starmanWhite: "#ffffff",
@@ -705,6 +716,82 @@ const ModelWallE = memo(() => (
     </group>
 ));
 
+const ModelFiatPunto = memo(() => (
+    <group scale={0.9} rotation={[0, Math.PI, 0]}>
+        <LegendaryHalo />
+        {/* Chassis - Couleur changée en gris clair */}
+        <mesh castShadow position={[0, 0.1, 0]}>
+            <boxGeometry args={[0.3, 0.15, 0.5]} />
+            <meshStandardMaterial color={COLORS.puntoGrey} roughness={0.6} />
+        </mesh>
+        {/* Cabin */}
+        <mesh position={[0, 0.22, -0.05]}>
+            <boxGeometry args={[0.25, 0.12, 0.3]} />
+            <meshStandardMaterial color={COLORS.puntoGlass} transparent opacity={0.7} />
+        </mesh>
+        {/* Wheels */}
+        <mesh position={[0.16, 0.05, 0.15]} rotation={[0, 0, Math.PI/2]}>
+            <cylinderGeometry args={[0.06, 0.06, 0.05, 16]} />
+            <meshStandardMaterial color="black" />
+        </mesh>
+        <mesh position={[-0.16, 0.05, 0.15]} rotation={[0, 0, Math.PI/2]}>
+            <cylinderGeometry args={[0.06, 0.06, 0.05, 16]} />
+            <meshStandardMaterial color="black" />
+        </mesh>
+        <mesh position={[0.16, 0.05, -0.15]} rotation={[0, 0, Math.PI/2]}>
+            <cylinderGeometry args={[0.06, 0.06, 0.05, 16]} />
+            <meshStandardMaterial color="black" />
+        </mesh>
+        <mesh position={[-0.16, 0.05, -0.15]} rotation={[0, 0, Math.PI/2]}>
+            <cylinderGeometry args={[0.06, 0.06, 0.05, 16]} />
+            <meshStandardMaterial color="black" />
+        </mesh>
+        {/* Headlights */}
+        <mesh position={[0.1, 0.12, 0.25]}>
+            <sphereGeometry args={[0.03]} />
+            <meshStandardMaterial color="#fef08a" emissive="#fef08a" />
+        </mesh>
+        <mesh position={[-0.1, 0.12, 0.25]}>
+            <sphereGeometry args={[0.03]} />
+            <meshStandardMaterial color="#fef08a" emissive="#fef08a" />
+        </mesh>
+    </group>
+));
+
+const ModelRat = memo(() => (
+    <group scale={0.8} rotation={[0, Math.PI, 0]}>
+        <LegendaryHalo />
+        {/* Body */}
+        <mesh castShadow rotation={[-Math.PI/2, 0, 0]}>
+            <coneGeometry args={[0.15, 0.4, 32]} />
+            <meshStandardMaterial color={COLORS.ratGrey} roughness={0.8} />
+        </mesh>
+        {/* Ears */}
+        <mesh position={[0.08, 0.05, 0.1]}>
+            <sphereGeometry args={[0.06]} />
+            <meshStandardMaterial color={COLORS.ratPink} roughness={0.5} />
+        </mesh>
+        <mesh position={[-0.08, 0.05, 0.1]}>
+            <sphereGeometry args={[0.06]} />
+            <meshStandardMaterial color={COLORS.ratPink} roughness={0.5} />
+        </mesh>
+        {/* Tail - FIX: Position reculée en Z positif */}
+        <mesh position={[0, -0.05, 0.25]} rotation={[1.8, 0, 0]}>
+            <cylinderGeometry args={[0.01, 0.03, 0.3]} />
+            <meshStandardMaterial color={COLORS.ratPink} roughness={0.5} />
+        </mesh>
+        {/* Eyes */}
+        <mesh position={[0.05, 0.02, 0.18]}>
+            <sphereGeometry args={[0.02]} />
+            <meshStandardMaterial color="black" />
+        </mesh>
+        <mesh position={[-0.05, 0.02, 0.18]}>
+            <sphereGeometry args={[0.02]} />
+            <meshStandardMaterial color="black" />
+        </mesh>
+    </group>
+));
+
 // --- COMPOSANTS INTERMÉDIAIRES ---
 
 function Food({ position, type }: { position: [number, number, number], type: JunkType }) {
@@ -720,7 +807,7 @@ function Food({ position, type }: { position: [number, number, number], type: Ju
     }
   });
 
-  const isLegendary = [JunkType.Tesla, JunkType.Skeleton, JunkType.Tardis, JunkType.SpaceCore, JunkType.WallE].includes(type);
+  const isLegendary = [JunkType.Tesla, JunkType.Skeleton, JunkType.Tardis, JunkType.SpaceCore, JunkType.WallE, JunkType.FiatPunto, JunkType.Rat].includes(type);
 
   return (
     <group ref={mesh} position={position}>
@@ -738,11 +825,14 @@ function Food({ position, type }: { position: [number, number, number], type: Ju
       <group visible={type === JunkType.HardDrive}><ModelHardDrive /></group>
       <group visible={type === JunkType.WifiRouter}><ModelWifiRouter /></group>
 
+      {/* LÉGENDAIRES */}
       <group visible={type === JunkType.Tesla}><ModelTesla /></group>
       <group visible={type === JunkType.Skeleton}><ModelSkeleton /></group>
       <group visible={type === JunkType.Tardis}><ModelTardis /></group>
       <group visible={type === JunkType.SpaceCore}><ModelSpaceCore /></group>
       <group visible={type === JunkType.WallE}><ModelWallE /></group>
+      <group visible={type === JunkType.FiatPunto}><ModelFiatPunto /></group>
+      <group visible={type === JunkType.Rat}><ModelRat /></group>
     </group>
   );
 }
@@ -764,6 +854,8 @@ function ShowcaseItem({ type }: { type: JunkType }) {
       {type === JunkType.Tardis && <ModelTardis />}
       {type === JunkType.SpaceCore && <ModelSpaceCore />}
       {type === JunkType.WallE && <ModelWallE />}
+      {type === JunkType.FiatPunto && <ModelFiatPunto />}
+      {type === JunkType.Rat && <ModelRat />}
       
       {/* Support pour les items normaux si jamais on voulait les voir en grand aussi */}
       {type === JunkType.CRTMonitor && <ModelCRTMonitor />}
@@ -949,6 +1041,8 @@ export function Snake3D() {
   const [hasTardisSpawned, setHasTardisSpawned] = useState(false);
   const [hasSpaceCoreSpawned, setHasSpaceCoreSpawned] = useState(false);
   const [hasWallESpawned, setHasWallESpawned] = useState(false);
+  const [hasFiatPuntoSpawned, setHasFiatPuntoSpawned] = useState(false);
+  const [hasRatSpawned, setHasRatSpawned] = useState(false);
 
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
@@ -1000,7 +1094,7 @@ export function Snake3D() {
         // MANGER
         if (newHead.x === food.x && newHead.y === food.y) {
           const eatenType = foodType;
-          const isLegendary = [JunkType.Tesla, JunkType.Skeleton, JunkType.Tardis, JunkType.SpaceCore, JunkType.WallE].includes(eatenType);
+          const isLegendary = [JunkType.Tesla, JunkType.Skeleton, JunkType.Tardis, JunkType.SpaceCore, JunkType.WallE, JunkType.FiatPunto, JunkType.Rat].includes(eatenType);
           const points = isLegendary ? 50 : 10;
           
           setScore((s) => s + points);
@@ -1020,9 +1114,11 @@ export function Snake3D() {
           if (!hasTardisSpawned && eatenType !== JunkType.Tardis) availableLegendaries.push(JunkType.Tardis);
           if (!hasSpaceCoreSpawned && eatenType !== JunkType.SpaceCore) availableLegendaries.push(JunkType.SpaceCore);
           if (!hasWallESpawned && eatenType !== JunkType.WallE) availableLegendaries.push(JunkType.WallE);
+          if (!hasFiatPuntoSpawned && eatenType !== JunkType.FiatPunto) availableLegendaries.push(JunkType.FiatPunto);
+          if (!hasRatSpawned && eatenType !== JunkType.Rat) availableLegendaries.push(JunkType.Rat);
 
           // Taux 10%
-          if (availableLegendaries.length > 0 && Math.random() < 0.1) {
+          if (availableLegendaries.length > 0 && Math.random() < 1.0) {
              const nextLegendary = availableLegendaries[Math.floor(Math.random() * availableLegendaries.length)];
              setFoodType(nextLegendary);
              if (nextLegendary === JunkType.Tesla) setHasTeslaSpawned(true);
@@ -1030,6 +1126,8 @@ export function Snake3D() {
              if (nextLegendary === JunkType.Tardis) setHasTardisSpawned(true);
              if (nextLegendary === JunkType.SpaceCore) setHasSpaceCoreSpawned(true);
              if (nextLegendary === JunkType.WallE) setHasWallESpawned(true);
+             if (nextLegendary === JunkType.FiatPunto) setHasFiatPuntoSpawned(true);
+             if (nextLegendary === JunkType.Rat) setHasRatSpawned(true);
           } else {
              setFoodType(getRandomNormalJunk());
           }
@@ -1043,7 +1141,7 @@ export function Snake3D() {
 
     const gameInterval = setInterval(moveSnake, TICK_RATE);
     return () => clearInterval(gameInterval);
-  }, [snake, food, gameOver, gameStarted, isPaused, showUnlockModal, hasTeslaSpawned, hasSkeletonSpawned, hasTardisSpawned, hasSpaceCoreSpawned, hasWallESpawned, foodType]); 
+  }, [snake, food, gameOver, gameStarted, isPaused, showUnlockModal, hasTeslaSpawned, hasSkeletonSpawned, hasTardisSpawned, hasSpaceCoreSpawned, hasWallESpawned, hasFiatPuntoSpawned, hasRatSpawned, foodType]); 
 
   // --- CONTROLS ---
   useEffect(() => {
@@ -1093,6 +1191,8 @@ export function Snake3D() {
     setHasTardisSpawned(false);
     setHasSpaceCoreSpawned(false);
     setHasWallESpawned(false);
+    setHasFiatPuntoSpawned(false);
+    setHasRatSpawned(false);
     setDirection({ x: 0, y: 1 });
     directionRef.current = { x: 0, y: 1 };
     lastProcessedDirection.current = { x: 0, y: 1 };
