@@ -1023,6 +1023,61 @@ function LaserArena() {
   );
 }
 
+// --- TRANSITION EFFECT ---
+const TransitionEffect = ({ onComplete }: { onComplete: () => void }) => {
+  const [blocks, setBlocks] = useState<React.ReactNode[]>([]);
+
+  useEffect(() => {
+    const rows = 12;
+    const cols = 16;
+    const newBlocks = [];
+    const centerX = cols / 2 - 0.5;
+    const centerY = rows / 2 - 0.5;
+    
+    let maxDelay = 0;
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const dist = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+        const delay = dist * 0.05; // seconds
+        if (delay > maxDelay) maxDelay = delay;
+
+        newBlocks.push(
+          <div
+            key={`${x}-${y}`}
+            className="absolute bg-slate-950 border border-slate-900"
+            style={{
+              left: `${(x / cols) * 100}%`,
+              top: `${(y / rows) * 100}%`,
+              width: `${100 / cols}%`,
+              height: `${100 / rows}%`,
+              animation: `revealBlock 0.5s ease-out forwards`,
+              animationDelay: `${delay}s`,
+            }}
+          />
+        );
+      }
+    }
+    setBlocks(newBlocks);
+
+    const totalDuration = (maxDelay + 0.5) * 1000;
+    const timer = setTimeout(onComplete, totalDuration);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden">
+      <style>{`
+        @keyframes revealBlock {
+          0% { transform: scale(1); opacity: 1; }
+          100% { transform: scale(0); opacity: 0; }
+        }
+      `}</style>
+      {blocks}
+    </div>
+  );
+};
+
 // --- MAIN COMPONENT ---
 
 export function Snake3D() {
@@ -1048,6 +1103,7 @@ export function Snake3D() {
   const [score, setScore] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false); // NOUVEL ÉTAT
 
   // Nouveaux états pour l'inventaire et le déblocage
   const [inventory, setInventory] = useState<JunkType[]>([]);
@@ -1059,6 +1115,7 @@ export function Snake3D() {
   // --- ACTIONS ---
   const startGame = () => {
     setGameStarted(true);
+    setIsTransitioning(true); // Lance la transition
     setFoodType(getRandomNormalJunk());
   };
 
@@ -1068,8 +1125,8 @@ export function Snake3D() {
 
   // --- GAME LOOP ---
   useEffect(() => {
-    // On met en pause la boucle si on affiche le modal de déblocage
-    if (gameOver || !gameStarted || isPaused || showUnlockModal) return;
+    // On met en pause la boucle si on affiche le modal de déblocage ou si une transition est en cours
+    if (gameOver || !gameStarted || isPaused || showUnlockModal || isTransitioning) return;
 
     const moveSnake = () => {
         const head = snake[0];
@@ -1141,7 +1198,7 @@ export function Snake3D() {
 
     const gameInterval = setInterval(moveSnake, TICK_RATE);
     return () => clearInterval(gameInterval);
-  }, [snake, food, gameOver, gameStarted, isPaused, showUnlockModal, hasTeslaSpawned, hasSkeletonSpawned, hasTardisSpawned, hasSpaceCoreSpawned, hasWallESpawned, hasFiatPuntoSpawned, hasRatSpawned, foodType]); 
+  }, [snake, food, gameOver, gameStarted, isPaused, showUnlockModal, hasTeslaSpawned, hasSkeletonSpawned, hasTardisSpawned, hasSpaceCoreSpawned, hasWallESpawned, hasFiatPuntoSpawned, hasRatSpawned, foodType, isTransitioning]); 
 
   // --- CONTROLS ---
   useEffect(() => {
@@ -1201,6 +1258,7 @@ export function Snake3D() {
     setGameOver(false);
     setGameStarted(true);
     setIsPaused(false);
+    setIsTransitioning(true); // Relance la transition au reset
     setShowUnlockModal(null);
   };
 
@@ -1279,6 +1337,9 @@ export function Snake3D() {
 
   return (
     <div className="relative h-screen w-full bg-black overflow-hidden font-sans">
+      {/* TRANSITION OVERLAY */}
+      {isTransitioning && <TransitionEffect onComplete={() => setIsTransitioning(false)} />}
+
       {/* HUD - TOP BAR */}
       <div className="absolute top-8 left-8 right-8 z-10 flex justify-between items-start pointer-events-none">
         <div className="font-black text-white text-3xl tracking-widest drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">
@@ -1330,7 +1391,7 @@ export function Snake3D() {
       )}
 
       {/* PAUSE */}
-      {isPaused && !gameOver && gameStarted && !showUnlockModal && (
+      {isPaused && !gameOver && gameStarted && !showUnlockModal && !isTransitioning && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="rounded-3xl border border-red-900 bg-slate-900/90 p-8 text-center shadow-2xl shadow-red-900/20">
             <h1 className="text-5xl font-black text-white tracking-widest animate-pulse drop-shadow-[0_0_15px_rgba(255,0,0,0.5)]">PAUSE</h1>
