@@ -75,10 +75,7 @@ export function LevelPreview({ level }: LevelPreviewProps) {
 
         {/* BODY : Titre & Infos */}
         <div className="mt-4">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">
-            <MapPin className="w-3 h-3 text-[#00E5FF]" />
-            Secteur Solaire
-          </div>
+      
 
           <h2 className="text-2xl font-black text-white leading-none mb-3 drop-shadow-md">
             {level.name}
