@@ -1,118 +1,129 @@
+// Updated CatModel.tsx with blinking and listening animation
+
 "use client";
 
-import { useAnimations, useGLTF } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 interface CatModelProps {
   isTalking: boolean;
+  isListening?: boolean;
 }
 
-export function CatModel({ isTalking }: CatModelProps) {
+export function CatModel({ isTalking, isListening }: CatModelProps) {
   const group = useRef<THREE.Group>(null);
-  const [hasWaved, setHasWaved] = useState(false); // Pour ne faire coucou qu'une fois
+  const { scene, nodes } = useGLTF("/models/cat.glb") as any;
 
-  // Charge ton modèle
-  const { scene, animations } = useGLTF("/models/cat.glb");
-  const { actions } = useAnimations(animations, group);
+  const initialRotations = useRef<{ [key: string]: THREE.Quaternion }>({});
 
-  // --- DEBUG TAILLE ---
+  const bones = useRef<{
+    head?: THREE.Bone;
+    spine?: THREE.Bone;
+    eyelidUp?: THREE.Bone;
+    eyelidDown?: THREE.Bone;
+    armL?: THREE.Bone;
+    armR?: THREE.Bone;
+    foreArmL?: THREE.Bone;
+    foreArmR?: THREE.Bone;
+  }>({});
+
+  const blinkTimer = useRef(0);
+  const [blinkSpeed] = useState(() => 0.15);
+
   useEffect(() => {
-    if (scene) {
-      const box = new THREE.Box3().setFromObject(scene);
-      const size = box.getSize(new THREE.Vector3());
-      console.log("📏 DIMENSIONS RÉELLES (x, y, z) :", size);
-      console.log("💡 Cible idéale pour Y : entre 1.5 et 3.0");
+    if (!nodes) return;
+
+    const findBone = (search: string[]) => {
+      return Object.values(nodes).find(
+        (node: any) => node.isBone && search.some(s => node.name.toLowerCase().includes(s.toLowerCase()))
+      ) as THREE.Bone | undefined;
+    };
+
+    bones.current = {
+      head: findBone(["head", "neck"]),
+      spine: findBone(["spine", "hips"]),
+      eyelidUp: findBone(["eyelid", "upperlid", "eye_up"]),
+      eyelidDown: findBone(["eyelid", "lowerlid", "eye_down"]),
+      armL: findBone(["leftarm", "l_arm"]),
+      armR: findBone(["rightarm", "r_arm"]),
+      foreArmL: findBone(["leftforearm", "l_forearm"]),
+      foreArmR: findBone(["rightforearm", "r_forearm"]),
+    };
+
+    Object.entries(bones.current).forEach(([k, bone]) => {
+      if (bone) initialRotations.current[k] = bone.quaternion.clone();
+    });
+  }, [nodes]);
+
+  const animateBone = (
+    boneName: keyof typeof bones.current,
+    x: number,
+    y: number,
+    z: number,
+    delta: number
+  ) => {
+    const bone = bones.current[boneName];
+    const base = initialRotations.current[boneName];
+    if (!bone || !base) return;
+
+    const target = base.clone();
+    const offset = new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z));
+    target.multiply(offset);
+
+    bone.quaternion.slerp(target, 4 * delta);
+  };
+
+  useFrame((state, delta) => {
+    const time = state.clock.elapsedTime;
+
+    // BREATHING
+    const breath = Math.sin(time * 2) * 0.05;
+    animateBone("spine", breath, 0, 0, delta);
+    animateBone("head", -breath * 0.5, 0, 0, delta);
+
+    // LISTENING (head tilt + small idle motion)
+    if (!isTalking && isListening) {
+      const tilt = Math.sin(time * 3) * 0.1;
+      animateBone("head", tilt, tilt * 0.3, 0, delta);
     }
-  }, [scene]);
 
-  // --- GESTION INTELLIGENTE DES ANIMATIONS ---
-  useEffect(() => {
-    if (!actions) return;
-
-    const keys = Object.keys(actions);
-    console.log("🎬 Animations trouvées :", keys);
-
-    if (keys.length > 0) {
-      // Recherche intelligente des noms d'animation (insensible à la casse)
-      const findAnim = (name: string) =>
-        keys.find((k) => k.toLowerCase().includes(name));
-
-      const idleKey = findAnim("idle") || keys[0]; // Fallback sur la 1ère anim si pas d'idle
-      const talkKey = findAnim("talk") || findAnim("speak") || idleKey;
-      const waveKey =
-        findAnim("wave") || findAnim("hello") || findAnim("greet"); // Coucou
-      const danceKey = findAnim("dance") || talkKey; // Danse
-
-      const idleAction = actions[idleKey];
-      const talkAction = actions[talkKey];
-      const waveAction = waveKey ? actions[waveKey] : null;
-      const danceAction = actions[danceKey];
-
-      // LOGIQUE D'ANIMATION
-
-      // 1. Priorité : Faire Coucou au démarrage (Intro)
-      if (waveAction && !hasWaved) {
-        // Stop les autres
-        idleAction?.stop();
-        talkAction?.stop();
-
-        // Joue Wave une seule fois
-        waveAction.reset().fadeIn(0.5).setLoop(THREE.LoopOnce, 1).play();
-
-        // À la fin du coucou, on passe à Idle
-        waveAction.clampWhenFinished = true;
-        const duration = waveAction.getClip().duration * 1000;
-
-        setTimeout(() => {
-          setHasWaved(true);
-          waveAction.fadeOut(0.5);
-          idleAction?.reset().fadeIn(0.5).play();
-        }, duration);
-
-        return; // On sort pour laisser le coucou se finir
-      }
-
-      // 2. Si on a déjà fait coucou, on gère la parole
-      if (hasWaved || !waveAction) {
-        if (isTalking) {
-          // Si on parle -> Talk (ou Dance si tu veux qu'il danse en parlant !)
-          idleAction?.fadeOut(0.5);
-          // Tu peux remplacer talkAction par danceAction ici pour tester la danse :
-          talkAction?.reset().fadeIn(0.5).play();
-        } else {
-          // Sinon -> Idle
-          talkAction?.fadeOut(0.5);
-          danceAction?.fadeOut(0.5);
-          idleAction?.reset().fadeIn(0.5).play();
-        }
-      }
+    // TALKING OR IDLE ARM ANIMATION
+    if (isTalking) {
+      const gesture = Math.sin(time * 10) * 0.1;
+      animateBone("armL", 0.2, 0, -0.5 + gesture, delta);
+      animateBone("foreArmL", 0.5, 0, 0, delta);
+      animateBone("armR", 0.2, 0, 0.5 - gesture, delta);
+      animateBone("foreArmR", 0.5, 0, 0, delta);
+    } else {
+      animateBone("armL", 0.3, -0.8, 0.5, delta);
+      animateBone("foreArmL", 2.0, 0, 0, delta);
+      animateBone("armR", 0.3, 0.8, -0.5, delta);
+      animateBone("foreArmR", 2.0, 0, 0, delta);
     }
-  }, [actions, isTalking, hasWaved]);
 
-  useFrame((state) => {
-    if (group.current) {
-      // Le chat suit doucement la souris
-      const target = new THREE.Vector3(
-        state.pointer.x,
-        state.pointer.y * 0.2,
-        5
-      );
-      group.current.lookAt(target);
+    // BLINKING SYSTEM
+    blinkTimer.current -= delta;
+    if (blinkTimer.current <= 0) {
+      blinkTimer.current = 2 + Math.random() * 3;
+    }
+
+    // During blink (100 ms)
+    const blinkProgress = Math.max(0, 0.1 - blinkTimer.current);
+    if (blinkProgress > 0) {
+      const blinkAmt = Math.sin((blinkProgress / 0.1) * Math.PI);
+      animateBone("eyelidUp", -0.3 * blinkAmt, 0, 0, delta);
+      animateBone("eyelidDown", 0.3 * blinkAmt, 0, 0, delta);
     }
   });
 
   return (
     <group ref={group} dispose={null}>
-      <primitive
-        object={scene}
-        scale={0.002}
-        position={[0, -1.5, 0]}
-        rotation={[0, 0, 0]}
-      />
+      <primitive object={scene} scale={0.003} position={[0, -2.8, -2]} />
     </group>
   );
 }
 
 useGLTF.preload("/models/cat.glb");
+export default CatModel;
