@@ -1,5 +1,6 @@
 "use client";
 
+import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -11,21 +12,100 @@ const COLORS = {
   satellitePanel: "#4169e1",
 };
 
+// --- TRANSITION DE SORTIE (Inverse de Snake3D) ---
+const ExitTransition = ({ onComplete }: { onComplete: () => void }) => {
+  const [blocks, setBlocks] = useState<React.ReactNode[]>([]);
+
+  useEffect(() => {
+    const rows = 12;
+    const cols = 16;
+    const newBlocks = [];
+    const centerX = cols / 2 - 0.5;
+    const centerY = rows / 2 - 0.5;
+    
+    // Vitesse de transition (ajustée pour être fluide mais pas trop longue)
+    const delayFactor = 0.06;
+    const animDuration = 0.6;
+
+    let maxDelay = 0;
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const dist = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+        const delay = dist * delayFactor;
+        if (delay > maxDelay) maxDelay = delay;
+
+        newBlocks.push(
+          <div
+            key={`${x}-${y}`}
+            className="absolute bg-slate-950 border border-slate-900"
+            style={{
+              left: `${(x / cols) * 100}%`,
+              top: `${(y / rows) * 100}%`,
+              width: `${100 / cols}%`,
+              height: `${100 / rows}%`,
+              transform: 'scale(0)', // On part de 0 (invisible)
+              opacity: 0,
+              animation: `coverBlock ${animDuration}s ease-out forwards`, // On va vers 1 (visible)
+              animationDelay: `${delay}s`,
+            }}
+          />
+        );
+      }
+    }
+    setBlocks(newBlocks);
+
+    // On déclenche la navigation une fois que l'écran est couvert
+    const totalDuration = (maxDelay + animDuration) * 1000;
+    const timer = setTimeout(onComplete, totalDuration);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  return (
+    <div className="absolute inset-0 w-full h-full pointer-events-none">
+      <style>{`
+        @keyframes coverBlock {
+          0% { transform: scale(0); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+      {blocks}
+    </div>
+  );
+};
+
 export function GlobeEnvironment() {
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const router = useRouter();
+
+  const handleSaucerClick = () => {
+    setIsTransitioning(true);
+  };
+
+  const handleTransitionComplete = () => {
+    router.push("/snake");
+  };
+
   return (
     <group>
-      <FlyingSaucer />
+      {/* Overlay HTML pour la transition */}
+      {isTransitioning && (
+        <Html fullscreen style={{ pointerEvents: 'none', zIndex: 9999 }}>
+          <ExitTransition onComplete={handleTransitionComplete} />
+        </Html>
+      )}
+
+      <FlyingSaucer onClick={handleSaucerClick} />
       <AsteroidField />
       <OrbitingSatellite />
     </group>
   );
 }
 
-function FlyingSaucer() {
+function FlyingSaucer({ onClick }: { onClick: () => void }) {
   const ufoRef = useRef<THREE.Group>(null);
   const cockpitRef = useRef<THREE.Mesh>(null);
-  const router = useRouter(); // 2. Initialisation du router
-  const [hovered, setHovered] = useState(false); // 3. État pour le survol
+  const [hovered, setHovered] = useState(false);
 
   // Gestion du curseur : change en "pointer" quand on survole la soucoupe
   useEffect(() => {
@@ -58,14 +138,14 @@ function FlyingSaucer() {
     <group
       ref={ufoRef}
       scale={0.9}
-      onClick={() => router.push("/snake")}
+      onClick={onClick}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
       <mesh position-y={0}>
         <cylinderGeometry args={[0.5, 0.5, 0.1, 32]} />
         <meshStandardMaterial
-          color={hovered ? "#e0e0e0" : COLORS.saucerBody} // Petit effet visuel au survol (optionnel)
+          color={hovered ? "#e0e0e0" : COLORS.saucerBody}
           metalness={0.9}
           roughness={0.1}
         />
@@ -83,6 +163,7 @@ function FlyingSaucer() {
     </group>
   );
 }
+
 function AsteroidField() {
   const groupRef = useRef<THREE.Group>(null);
 
